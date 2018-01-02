@@ -13,31 +13,44 @@ def csvFile():
 	file.writerow(["title","productName","url"])
 	csvFile.close()
 
-def appendCsvFile(title, productName, url):
-	with open("../results.csv","a", newline='') as csvFile:
-		write = csv.writer(csvFile)
-		write.writerow([title , productName , url])
-	csvFile.close()
+def appendCsvFile(titleList, productNameList, urlList):
+	for i in range (len(titleList)):
+		with open("../results.csv","a", newline='') as csvFile:
+			write = csv.writer(csvFile)
+			write.writerow([titleList[i].text, \
+				productNameList[i].get_attribute("title"), \
+				urlList[i].get_attribute("href")])
+		csvFile.close()
 
-def extractFromURL(url):
-	for numberPage in range (1,5):
-		driver = webdriver.Chrome()
-		driver.get(url + str(numberPage))
+def navigation(url, numberPage):
+	global driver
+	driver = webdriver.Chrome()
+	driver.get(url + str(numberPage))
 
-		titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
-		productNameList = driver.find_elements_by_class_name("shelf-default__item")
-		urlList = driver.find_elements_by_class_name("shelf-default__link")
+def extractFromURL():
+	global driver
+		
+	titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
+	productNameList = driver.find_elements_by_class_name("shelf-default__item")
+	urlList = driver.find_elements_by_class_name("shelf-default__link")
 
-		for i in range (len(titleList)):
-			appendCsvFile(titleList[i].text, \
-					productNameList[i].get_attribute("title"), urlList[i].get_attribute("href"))	
+	appendCsvFile(titleList, productNameList, urlList)
+	driver.close()	
 
-		driver.close()
+def setUp(url):
+	global driver
+	numberPage = 1
+	while True:
+		navigation(url, numberPage)
+		if not driver.find_elements_by_class_name("shelf-default__item"):
+			driver.close()
+			break
+		extractFromURL()			
+		numberPage += 1
 
 def main ():
-
 	csvFile()
-	extractFromURL("http://www.epocacosmeticos.com.br/selecao/acao#")
+	setUp("http://www.epocacosmeticos.com.br/selecao/acao#")
 
 if __name__ == '__main__':
     main()
