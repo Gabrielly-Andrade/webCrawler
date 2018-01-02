@@ -19,35 +19,25 @@ def appendCsvFile(title, productName, url):
 		write.writerow([title , productName , url])
 	csvFile.close()
 
-chromePath = r"C:\Users\Gabri\webDriver\chromedriver.exe"
+def extractFromURL(url):
+	for numberPage in range (1,5):
+		driver = webdriver.Chrome()
+		driver.get(url + str(numberPage))
 
-csvFile()
+		titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
+		productNameList = driver.find_elements_by_class_name("shelf-default__product-name")
+		urlList = driver.find_elements_by_class_name("shelf-default__link")
 
-for numberPage in range (1,3):
-	#Creating the instance of Chrome WebDriver
-	driver = webdriver.Chrome(chromePath)
-	#Navigating to the page given by the URL
-	driver.get("http://www.epocacosmeticos.com.br/selecao/acao#" + str(numberPage))
-	#Confirming that title has "Época Cosméticos" word in it
-	assert "Época Cosméticos" in driver.title
+		for i in range (len(titleList)):
+			appendCsvFile(titleList[i].text, \
+					productNameList[i].text, urlList[i].get_attribute("href"))	
 
-	titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
-	#print (titleList) 
-	productNameList = driver.find_elements_by_class_name("shelf-default__product-name")
-	urlList = driver.find_elements_by_class_name("shelf-default__link")
+		driver.close()
 
-	for i in range (len(titleList)):
-		appendCsvFile(titleList[i].text, \
-				productNameList[i].text, urlList[i].get_attribute("href"))	
+def main ():
 
-	titleList.clear()
-	driver.close()
+	csvFile()
+	extractFromURL("http://www.epocacosmeticos.com.br/selecao/acao#")
 
-	'''
-	Trying to use a automatic pagination, but without success :/ 
-	#for i in range (1,3):
-	driver.find_element_by_xpath("//*[@id='PagerBottom_26687552']/ul/li[8]").click()
-	titleList2 = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a") 
-	for title in titleList2:
-		print(title.text)
-	'''
+if __name__ == '__main__':
+    main()
