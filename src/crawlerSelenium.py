@@ -25,12 +25,12 @@ def extractFromURL(url):
 		driver.get(url + str(numberPage))
 
 		titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
-		productNameList = driver.find_elements_by_class_name("shelf-default__product-name")
+		productNameList = driver.find_elements_by_class_name("shelf-default__item")
 		urlList = driver.find_elements_by_class_name("shelf-default__link")
 
 		for i in range (len(titleList)):
 			appendCsvFile(titleList[i].text, \
-					productNameList[i].text, urlList[i].get_attribute("href"))	
+					productNameList[i].get_attribute("title"), urlList[i].get_attribute("href"))	
 
 		driver.close()
 
