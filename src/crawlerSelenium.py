@@ -28,36 +28,54 @@ def categoryPage(categoryURL, numberPage):
 	#of the page (or section)
 	global driver
 	driver = webdriver.Firefox()
+	driver.maximize_window()
 	driver.get(categoryURL + "#" + str(numberPage))
 
 def extractFromURL():
 	#This function extract the title, product name and url 
 	#from each product of the page given
-	global driver	
-	titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
-	productNameList = driver.find_elements_by_class_name("shelf-default__item")
-	urlList = driver.find_elements_by_class_name("shelf-default__link")
-	appendCSVFile(titleList, productNameList, urlList)
-	driver.close()	
+	global driver
+	global numPagination
+	global html
+	try:
+		driver.implicitly_wait(10)
+		titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
+		productNameList = driver.find_elements_by_class_name("shelf-default__item")
+		urlList = driver.find_elements_by_class_name("shelf-default__link")		
+	except Exception:
+		print("Opps. Error in page", numPagination, "from", html)
+		print("Trying again...")
+		setUp(html,numPagination)
+	else:
+		try:
+			appendCSVFile(titleList, productNameList, urlList)
+		except Exception:
+			print("Sorry, something went wrong on page", numPagination, "from", html)
+			print("Trying again...")
+			setUp(html,numPagination)
+	finally:
+		driver.close()	
 
-def setUp(categoryURL):
+def setUp(categoryURL, numberPage=1):
 	#This function control the number (section or navigation) of each  
 	#category page and create a loop to call other auxiliary functions
 	global driver
-	numberPage = 1
+	global numPagination
+	numPagination = numberPage
 	while True:
-		categoryPage(categoryURL, numberPage)
+		categoryPage(categoryURL, numPagination)
 		if not driver.find_elements_by_class_name("shelf-default__item"):
 			driver.close()
 			break
 		extractFromURL()			
-		numberPage += 1
+		numPagination += 1
 
 def getLinks(mainURL):
 	#This function get all the links in the category section
 	#and return a list of pages to scrape	
 	global driver
 	driver = webdriver.Firefox()
+	driver.maximize_window()
 	driver.get(mainURL)
 	pages = []
 	pageList = driver.find_elements_by_xpath("//ul[@class='menu__list']/li[1]/div/ul/li/a")
@@ -67,12 +85,13 @@ def getLinks(mainURL):
 	return pages
 
 def main ():
+	global html
 	csvFile()
 	pages = getLinks("http://www.epocacosmeticos.com.br/")
 	print (pages)
-	#for i in range (0,len(pages)): -> not tested yet
-	for i in range (0,1): #Testing only the "perfume" page
-		setUp(pages[i])
+	for i in range (7,len(pages)): 
+		html = pages[i]
+		setUp(html)
 
 
 if __name__ == '__main__':
