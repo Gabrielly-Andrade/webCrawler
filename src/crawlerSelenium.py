@@ -14,13 +14,19 @@ def csvFile():
 	csvFile.close()
 
 def appendCSVFile(titleList, productNameList, urlList):
-	for i in range (len(titleList)):
-		with open("../results.csv","a", newline='') as csvFile:
-			write = csv.writer(csvFile)
-			write.writerow([titleList[i].text, \
-				productNameList[i].get_attribute("title"), \
-				urlList[i].get_attribute("href")])
-		csvFile.close()
+	global products
+	for i in range (len(titleList)):			
+		link = urlList[i].get_attribute("href")
+		if link not in products:
+			with open("../results.csv","a", newline='') as csvFile:	
+				write = csv.writer(csvFile)
+				write.writerow([titleList[i].text, \
+					productNameList[i].get_attribute("title"), \
+					urlList[i].get_attribute("href")])
+				products.add(link)
+			csvFile.close()
+		else:
+			print("PRODUTO REPETIDO ", urlList[i].get_attribute("href")) #temporary
 
 def categoryPage(categoryURL, numberPage):
 	#This function is responsible for navigate to a page given
@@ -37,6 +43,7 @@ def extractFromURL():
 	global driver
 	global numPagination
 	global html
+	#temporary, need smth better
 	try:
 		driver.implicitly_wait(10)
 		titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
@@ -86,10 +93,12 @@ def getLinks(mainURL):
 
 def main ():
 	global html
+	global products
+	products = set()
 	csvFile()
 	pages = getLinks("http://www.epocacosmeticos.com.br/")
 	print (pages)
-	for i in range (7,len(pages)): 
+	for i in range (0,len(pages)): 
 		html = pages[i]
 		setUp(html)
 
