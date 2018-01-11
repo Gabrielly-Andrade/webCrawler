@@ -13,34 +13,23 @@ def csvFile():
 	file.writerow(["title","productName","url"])
 	csvFile.close()
 
-def appendCSVFile(titleList, productNameList, urlList):
-	global products
-	for i in range (len(titleList)):			
-		link = urlList[i].get_attribute("href")
-		if link not in products:
-			with open("../results.csv","a", newline='') as csvFile:	
-				write = csv.writer(csvFile)
-				write.writerow([titleList[i].text, \
-					productNameList[i].get_attribute("title"), \
-					urlList[i].get_attribute("href")])
-				products.add(link)
-			csvFile.close()
-		else:
-			print("PRODUTO REPETIDO ", urlList[i].get_attribute("href")) #temporary
+def appendCSVFile(title, productName, url):
+	with open("../results.csv","a", newline='') as csvFile:	
+		write = csv.writer(csvFile)
+		write.writerow([title.text, productName.get_attribute("title"), \
+			url.get_attribute("href")])
+	csvFile.close()
 
-def categoryPage(categoryURL, numberPage):
-	#This function is responsible for navigate to a page given
-	#with the main url (url category page) and the number
-	#of the page (or section)
-	global driver
-	driver = webdriver.Firefox()
-	driver.maximize_window()
-	driver.get(categoryURL + "#" + str(numberPage))
+def checkRepetition(products, url):
+	link = url.get_attribute("href")
+	if link not in products:
+		products.add(link)
+		return False
+	return True
 
-def extractFromURL():
+def extractFromURL(driver, products):
 	#This function extract the title, product name and url 
 	#from each product of the page given
-	global driver
 	global numPagination
 	global html
 	#temporary, need smth better
@@ -52,56 +41,63 @@ def extractFromURL():
 	except Exception:
 		print("Opps. Error in page", numPagination, "from", html)
 		print("Trying again...")
-		setUp(html,numPagination)
+		setUp(driver, html,numPagination)
 	else:
 		try:
-			appendCSVFile(titleList, productNameList, urlList)
+			for i in range(len(titleList)):
+				if checkRepetition(products, urlList[i]) == False:
+					appendCSVFile(titleList[i], productNameList[i], urlList[i])
 		except Exception:
 			print("Sorry, something went wrong on page", numPagination, "from", html)
 			print("Trying again...")
-			setUp(html,numPagination)
+			setUp(driver, html,numPagination)
 	finally:
 		driver.close()	
 
 def setUp(categoryURL, numberPage=1):
 	#This function control the number (section or navigation) of each  
 	#category page and create a loop to call other auxiliary functions
-	global driver
 	global numPagination
 	numPagination = numberPage
+	products = set()
 	while True:
-		categoryPage(categoryURL, numPagination)
+		driver = getWebDriver()
+		driver.get(categoryURL + "#" + str(numPagination))
 		if not driver.find_elements_by_class_name("shelf-default__item"):
 			driver.close()
 			break
-		extractFromURL()			
+		extractFromURL(driver, products)			
 		numPagination += 1
 
-def getLinks(mainURL):
+def getLinks(driver, mainURL):
 	#This function get all the links in the category section
 	#and return a list of pages to scrape	
-	global driver
-	driver = webdriver.Firefox()
-	driver.maximize_window()
 	driver.get(mainURL)
 	pages = []
 	pageList = driver.find_elements_by_xpath("//ul[@class='menu__list']/li[1]/div/ul/li/a")
 	for i in range (0,len(pageList)):
-		pages.append(pageList[i].get_attribute("href"))
+		url = pageList[i].get_attribute("href")
+		if "ofertas" not in url:
+			pages.append(url)
 	driver.close()
 	return pages
 
+def getWebDriver():
+	#This function returns the instance of Firefox
+	#WebDriver
+	driver = webdriver.Firefox()
+	driver.maximize_window()
+	return driver
+
 def main ():
 	global html
-	global products
-	products = set()
 	csvFile()
-	pages = getLinks("http://www.epocacosmeticos.com.br/")
+	driver = getWebDriver()
+	pages = getLinks(driver, "http://www.epocacosmeticos.com.br/")
 	print (pages)
 	for i in range (0,len(pages)): 
 		html = pages[i]
 		setUp(html)
-
 
 if __name__ == '__main__':
     main()
