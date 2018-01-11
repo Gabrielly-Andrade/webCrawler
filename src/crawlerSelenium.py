@@ -20,14 +20,15 @@ def appendCSVFile(title, productName, url):
 			url.get_attribute("href")])
 	csvFile.close()
 
-def checkRepetition(products, url):
+def checkRepetition(url):
+	global products
 	link = url.get_attribute("href")
-	if link not in products:
+	if link not in products:	
 		products.add(link)
 		return False
 	return True
 
-def extractFromURL(driver, products):
+def extractFromURL(driver):
 	#This function extract the title, product name and url 
 	#from each product of the page given
 	global numPagination
@@ -35,22 +36,25 @@ def extractFromURL(driver, products):
 	#temporary, need smth better
 	try:
 		driver.implicitly_wait(10)
-		titleList = driver.find_elements_by_xpath("//span[@class='shelf-default__brand']/a")
-		productNameList = driver.find_elements_by_class_name("shelf-default__item")
-		urlList = driver.find_elements_by_class_name("shelf-default__link")		
+		titleList = driver.find_elements_by_xpath(
+			"//span[@class='shelf-default__brand']/a")
+		productNameList = driver.find_elements_by_class_name(
+			"shelf-default__item")
+		urlList = driver.find_elements_by_class_name(
+			"shelf-default__link")		
 	except Exception:
-		print("Opps. Error in page", numPagination, "from", html)
-		print("Trying again...")
-		setUp(driver, html,numPagination)
+		print("Opps. Error in page", numPagination, "from", html, "trying again...")
+		setUp(html,numPagination)
 	else:
 		try:
 			for i in range(len(titleList)):
-				if checkRepetition(products, urlList[i]) == False:
+				if checkRepetition(urlList[i]) == False:
 					appendCSVFile(titleList[i], productNameList[i], urlList[i])
+				else:
+					print ("produto repetido: ", urlList[i].get_attribute("href"))
 		except Exception:
-			print("Sorry, something went wrong on page", numPagination, "from", html)
-			print("Trying again...")
-			setUp(driver, html,numPagination)
+			print("Sorry, something went wrong on page", numPagination, "from", html, "trying again...")
+			setUp(html,numPagination)
 	finally:
 		driver.close()	
 
@@ -59,6 +63,7 @@ def setUp(categoryURL, numberPage=1):
 	#category page and create a loop to call other auxiliary functions
 	global numPagination
 	numPagination = numberPage
+	global products 
 	products = set()
 	while True:
 		driver = getWebDriver()
@@ -66,7 +71,7 @@ def setUp(categoryURL, numberPage=1):
 		if not driver.find_elements_by_class_name("shelf-default__item"):
 			driver.close()
 			break
-		extractFromURL(driver, products)			
+		extractFromURL(driver)			
 		numPagination += 1
 
 def getLinks(driver, mainURL):
@@ -74,7 +79,8 @@ def getLinks(driver, mainURL):
 	#and return a list of pages to scrape	
 	driver.get(mainURL)
 	pages = []
-	pageList = driver.find_elements_by_xpath("//ul[@class='menu__list']/li[1]/div/ul/li/a")
+	pageList = driver.find_elements_by_xpath(
+		"//ul[@class='menu__list']/li[1]/div/ul/li/a")
 	for i in range (0,len(pageList)):
 		url = pageList[i].get_attribute("href")
 		if "ofertas" not in url:
