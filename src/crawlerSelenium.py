@@ -5,7 +5,11 @@
 
 # Import the module to webscrape dynamic content from a page
 from selenium import webdriver
+from bs4 import BeautifulSoup
+import requests
+import re
 import csv
+import json
 
 
 def csv_file():
@@ -15,64 +19,67 @@ def csv_file():
     csvfile.close()
 
 
-def append_csv_file(title, name, url):
+def append_product(title, name, url):
     with open("../results.csv", "a", newline='') as csvfile:
         write = csv.writer(csvfile)
-        write.writerow([title.text, name.get_attribute("title"),
-                        url.get_attribute("href")])
+        write.writerow([title.text, name, url.get_attribute("href")])
         csvfile.close()
 
 
-def check_repetition(url):
-    # This function check for repeated url's
-    global products
-    link = url.get_attribute("href")
-    if link not in products:
-        products.add(link)
-        return False
-    return True
-
-
-def extract_from_url(driver):
+def extract_products(driver):
     # This function extract the title, product name and url
     # from each product of the page given
-    global num_pagination
-    global page
-    try:
-        driver.implicitly_wait(10)
-        title_list = driver.find_elements_by_xpath(
+    driver.implicitly_wait(10)
+    title_list = driver.find_elements_by_xpath(
             "//span[@class='shelf-default__brand']/a")
-        name_list = driver.find_elements_by_class_name(
-            "shelf-default__item")
-        url_list = driver.find_elements_by_class_name(
-            "shelf-default__link")
-        for i in range(len(title_list)):
-            if not check_repetition(url_list[i]):
-                append_csv_file(title_list[i], name_list[i], url_list[i])
-            else:
-                print("repeated product: ", url_list[i].get_attribute("href"))
-    except Exception:
-        print("Ops. Error in page", num_pagination, "from", page, "trying again...")
-        set_up(page, num_pagination)
-    finally:
-        driver.close()
+    url_list = driver.find_elements_by_class_name("shelf-default__link")
+    i = 0
+    for url in url_list:
+        name_list = extract_name_products(url)
+        for name in name_list:
+            append_product(title_list[i], name, url)
+        i += 1
+    driver.close()
 
 
-def set_up(category_url, number_page=1):
+def extract_json(url):
+    source_code = url.get_attribute("href")
+    source_code = requests.get(source_code)
+    plain_text = source_code.text
+    soup = BeautifulSoup(plain_text, "lxml")
+    script = soup.find("script", text=re.compile(r"skuJson_\d"))
+    json_text = re.search(r"\s*skuJson_\d\s*=\s*({.*})\s*;\s*",
+                          script.string, flags=re.DOTALL | re.MULTILINE).group(1)
+    print (json_text)
+    return json_text
+
+
+def extract_name_products(url):
+    # This function extract the name of each product
+    # plus your dimension from a script
+    json_text = extract_json(url)
+    data = json.loads(json_text)
+    name_list = []
+    name_product = (data["name"])
+    dimensions_list = (data["dimensionsMap"]["Variação"])
+    for dimension in dimensions_list:
+        name_list.append(name_product + " " + "-" + " " + dimension)
+    return name_list
+
+
+def set_up(category_url, number_page=4):
     # This function control the number (section or navigation) of each
     # category page and create a loop to call other auxiliary functions
-    global num_pagination
-    num_pagination = number_page
     global products
     products = set()
     while True:
         driver = get_webdriver()
-        driver.get(category_url + "#" + str(num_pagination))
+        driver.get(category_url + "#" + str(number_page))
         if not driver.find_elements_by_class_name("shelf-default__item"):
             driver.close()
             break
-        extract_from_url(driver)
-        num_pagination += 1
+        extract_products(driver)
+        number_page += 1
 
 
 def get_links(driver, main_url):
@@ -99,13 +106,12 @@ def get_webdriver():
 
 
 def main():
-    global page
     csv_file()
     driver = get_webdriver()
     pages = get_links(driver, "http://www.epocacosmeticos.com.br/")
-    print(pages)
-    for page in pages:
-        set_up(page)
+    set_up(pages[0]) #Testing with perfumes page
+    #for page in pages:
+        #set_up(page)
 
 
 if __name__ == '__main__':
