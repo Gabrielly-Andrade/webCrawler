@@ -33,9 +33,8 @@ def extract_products(driver):
     url_list = driver.find_elements_by_class_name("shelf-default__link")
     i = 0
     for url in url_list:
-        print (url)
         title = extract_title(url)
-        name_list = extract_name_products(url)
+        name_list = extract_complete_name_products(url)
         for name in name_list:
             append_product(title, name, url)
         i += 1
@@ -56,10 +55,14 @@ def extract_json_variations(url):
     # This function extract the json who contains
     # the variations of each product
     soup = extract_source_code_product(url)
-    script = soup.find("script", text=re.compile(r"skuJson_\d"))
-    json_text = re.search(r"\s*skuJson_\d\s*=\s*({.*})\s*;\s*",
-                          script.string, flags=re.DOTALL | re.MULTILINE).group(1)
-    return json_text
+    script = soup.find("script", text=re.compile(r"skuJson_0"))
+    try:
+        json_text = re.search(r"\s*skuJson_0\s*=\s*({.*})\s*;\s*",
+                              script.string, flags=re.DOTALL | re.MULTILINE).group(1)
+    except AttributeError:
+        pass
+    else:
+        return json_text
 
 
 def extract_title(url):
@@ -70,20 +73,33 @@ def extract_title(url):
     return title
 
 
-def extract_name_products(url):
+def extract_name_product_without_variation(url):
+    # This function extract the main product name
+    # from each page of product
+    soup = extract_source_code_product(url)
+    product_name = soup.find("div", {"class", "product__floating-info--name"}).find("div").string
+    return product_name
+
+
+def extract_complete_name_products(url):
     # This function extract the name of each product
     # plus your dimension from a script
-    json_text = extract_json_variations(url)
-    data = json.loads(json_text)
     name_list = []
-    name_product = (data["name"])
-    dimensions_list = (data["dimensionsMap"]["Variação"])
-    for dimension in dimensions_list:
-        name_list.append(name_product + " " + "-" + " " + dimension)
+    product_name = extract_name_product_without_variation(url)
+    json_text = extract_json_variations(url)
+    if json_text is not None:
+        data = json.loads(json_text)
+        dimensions_map = (data["dimensionsMap"])
+        variations_list = list(dimensions_map.values())[0]
+        if type(variations_list) == list and len(variations_list) > 1:
+            for variation in variations_list:
+                name_list.append(product_name + " " + "-" + " " + variation)
+            return name_list  
+    name_list.append(product_name)
     return name_list
 
 
-def set_up(category_url, number_page=1):
+def set_up(category_url, number_page=4):
     # This function control the number (section or navigation) of each
     # category page and create a loop to call other auxiliary functions
     global products
