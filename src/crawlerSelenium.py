@@ -23,16 +23,15 @@ def append_product(title, name, url):
     with open("../results.csv", "a", newline='') as csvfile:
         write = csv.writer(csvfile)
         write.writerow([title, name, url.get_attribute("href")])
-        csvfile.close()
 
 
 def extract_products(driver):
     # This function extract the title, product name and url
     # from each product of the page given
-    driver.implicitly_wait(10) 
     url_list = driver.find_elements_by_class_name("shelf-default__link")
     i = 0
     for url in url_list:
+        driver.implicitly_wait(10) 
         title = extract_title(url)
         name_list = extract_complete_name_products(url)
         for name in name_list:
@@ -77,7 +76,8 @@ def extract_name_product_without_variation(url):
     # This function extract the main product name
     # from each page of product
     soup = extract_source_code_product(url)
-    product_name = soup.find("div", {"class", "product__floating-info--name"}).find("div").string
+    find_element = soup.find("div", {"class", "product__floating-info--name"})
+    product_name = find_element.find("div").string
     return product_name
 
 
@@ -99,11 +99,9 @@ def extract_complete_name_products(url):
     return name_list
 
 
-def set_up(category_url, number_page=4):
+def set_up(category_url, number_page=1):
     # This function control the number (section or navigation) of each
     # category page and create a loop to call other auxiliary functions
-    global products
-    products = set()
     while True:
         driver = get_webdriver()
         driver.get(category_url + "#" + str(number_page))
