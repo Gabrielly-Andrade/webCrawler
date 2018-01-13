@@ -22,42 +22,58 @@ def csv_file():
 def append_product(title, name, url):
     with open("../results.csv", "a", newline='') as csvfile:
         write = csv.writer(csvfile)
-        write.writerow([title.text, name, url.get_attribute("href")])
+        write.writerow([title, name, url.get_attribute("href")])
         csvfile.close()
 
 
 def extract_products(driver):
     # This function extract the title, product name and url
     # from each product of the page given
-    driver.implicitly_wait(10)
-    title_list = driver.find_elements_by_xpath(
-            "//span[@class='shelf-default__brand']/a")
+    driver.implicitly_wait(10) 
     url_list = driver.find_elements_by_class_name("shelf-default__link")
     i = 0
     for url in url_list:
+        print (url)
+        title = extract_title(url)
         name_list = extract_name_products(url)
         for name in name_list:
-            append_product(title_list[i], name, url)
+            append_product(title, name, url)
         i += 1
     driver.close()
 
 
-def extract_json(url):
+def extract_source_code_product(url):
+    # This function extract the source code
+    # of each page of product
     source_code = url.get_attribute("href")
     source_code = requests.get(source_code)
     plain_text = source_code.text
     soup = BeautifulSoup(plain_text, "lxml")
+    return soup
+
+
+def extract_json_variations(url):
+    # This function extract the json who contains
+    # the variations of each product
+    soup = extract_source_code_product(url)
     script = soup.find("script", text=re.compile(r"skuJson_\d"))
     json_text = re.search(r"\s*skuJson_\d\s*=\s*({.*})\s*;\s*",
                           script.string, flags=re.DOTALL | re.MULTILINE).group(1)
-    print (json_text)
     return json_text
+
+
+def extract_title(url):
+    # This function extract the tag title from
+    # each page of product
+    soup = extract_source_code_product(url)
+    title = soup.find("title").string
+    return title
 
 
 def extract_name_products(url):
     # This function extract the name of each product
     # plus your dimension from a script
-    json_text = extract_json(url)
+    json_text = extract_json_variations(url)
     data = json.loads(json_text)
     name_list = []
     name_product = (data["name"])
@@ -67,7 +83,7 @@ def extract_name_products(url):
     return name_list
 
 
-def set_up(category_url, number_page=4):
+def set_up(category_url, number_page=1):
     # This function control the number (section or navigation) of each
     # category page and create a loop to call other auxiliary functions
     global products
