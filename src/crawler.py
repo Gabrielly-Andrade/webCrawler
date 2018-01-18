@@ -56,7 +56,7 @@ class Crawler:
             if "ofertas" not in url:
                 categories_pages.append(url)
         self.__driver.quit()
-        self.visit_categories(categories_pages)
+        return categories_pages
 
     def visit_categories(self, categories_pages):
         for page in categories_pages:
@@ -149,7 +149,8 @@ def main():
     csv_file.create_file()
 
     epoca_cosmeticos = Crawler()
-    epoca_cosmeticos.get_categories("http://www.epocacosmeticos.com.br/")
+    categories_pages = epoca_cosmeticos.get_categories("http://www.epocacosmeticos.com.br/")
+    epoca_cosmeticos.visit_categories(categories_pages)
 
 
 if __name__ == '__main__':
