@@ -74,16 +74,46 @@ class Crawler:
     def extract_products(self):
         # This method extract the title, product name and url
         # from each product of the page given
-        url_list = self.__driver.find_elements_by_class_name("shelf-default__link")
+        url_list = self.get_urls()
         for url in url_list:
             url = url.get_attribute("href")
             self.__driver.implicitly_wait(10)
             title = self.get_title(url)
-            #name_list = extract_complete_name_products(url)
-            #for name in name_list:
-            new_product = Products(title, "test", url)
-            new_product.save_product()
+            name_list = self.get_name(url)
+            for name in name_list:
+                new_product = Products(title, name, url)
+                new_product.save_product()
         self.__driver.close()
+
+    @staticmethod
+    def extract_source_code_product(url):
+        # This function extract the source code
+        # of each page of product
+        source_code = requests.get(url)
+        plain_text = source_code.text
+        soup = BeautifulSoup(plain_text, "lxml")
+        return soup
+
+    @staticmethod
+    def extract_json_variations(url, soup):
+        # This function extract the json who contains
+        # the variations of each product
+        script = soup.find("script", text=re.compile(r"skuJson_0"))
+        try:
+            json_text = re.search(r"\s*skuJson_0\s*=\s*({.*})\s*;\s*",
+                                  script.string, flags=re.DOTALL | re.MULTILINE).group(1)
+        except AttributeError:
+            pass
+        else:
+            return json_text
+
+    @staticmethod
+    def extract_name_product_without_variation(url, soup):
+        # This function extract the main product name
+        # from each page of product
+        find_element = soup.find("div", {"class", "product__floating-info--name"})
+        product_name = find_element.find("div").string
+        return product_name
 
     def get_title(self, url):
         # This function extract the tag title from
@@ -92,14 +122,26 @@ class Crawler:
         title = soup.find("title").string
         return title
 
-    def extract_source_code_product(self, url):
-        # This function extract the source code
-        # of each page of product
-        source_code = url.get_attribute("href")
-        source_code = requests.get(source_code)
-        plain_text = source_code.text
-        soup = BeautifulSoup(plain_text, "lxml")
-        return soup
+    def get_urls(self):
+        return self.__driver.find_elements_by_class_name("shelf-default__link")
+
+    def get_name(self, url):
+        # This function extract the name of each product
+        # plus your dimension from a script
+        name_list = []
+        soup = self.extract_source_code_product(url)
+        product_name = self.extract_name_product_without_variation(url, soup)
+        json_text = self.extract_json_variations(url, soup)
+        if json_text:
+            data = json.loads(json_text)
+            dimensions_map = (data["dimensionsMap"])
+            variations_list = list(dimensions_map.values())[0]
+            if type(variations_list) == list and len(variations_list) > 1:
+                for variation in variations_list:
+                    name_list.append(product_name + " " + "-" + " " + variation)
+                return name_list
+        name_list.append(product_name)
+        return name_list
 
 
 def main():
