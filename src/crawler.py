@@ -18,6 +18,10 @@ class Products:
         self.name = name
         self.url = url
 
+    def save_product(self):
+        csv_file = ExportCsv("../results.csv")
+        csv_file.append_file(self.title, self.name, self.url)
+
 
 class ExportCsv:
 
@@ -33,25 +37,25 @@ class ExportCsv:
     def append_file(self, title, name, url):
         with open("../results.csv", "a", newline='') as csv_file:
             write = csv.writer(csv_file)
-            write.writerow([self.title, self.name, self.url])
+            write.writerow([title, name, url])
 
 
 class Crawler:
 
     def __init__(self):
-        self.driver = webdriver.Firefox()
-        self.driver.maximize_window()
+        self.__driver = webdriver.Firefox()
+        self.__driver.maximize_window()
 
     def get_categories(self, main_url):
-        self.driver.get(main_url)
+        self.__driver.get(main_url)
         categories_pages = []
-        page_list = self.driver.find_elements_by_xpath(
+        page_list = self.__driver.find_elements_by_xpath(
             "//ul[@class='menu__list']/li[1]/div/ul/li/a")
         for page in page_list:
             url = page.get_attribute("href")
             if "ofertas" not in url:
                 categories_pages.append(url)
-        self.driver.quit()
+        self.__driver.quit()
         self.visit_categories(categories_pages)
 
     def visit_categories(self, categories_pages):
@@ -59,13 +63,44 @@ class Crawler:
             number_page = 1
             while True:
                 self.__init__()
-                self.driver.get(page + "#" + str(number_page))
-                if not self.driver.find_elements_by_class_name(
+                self.__driver.get(page + "#" + str(number_page))
+                if not self.__driver.find_elements_by_class_name(
                         "shelf-default__item"):
-                    self.driver.quit()
+                    self.__driver.quit()
                     break
-                extract_products()
+                self.extract_products()
                 number_page += 1
+
+    def extract_products(self):
+        # This method extract the title, product name and url
+        # from each product of the page given
+        url_list = self.__driver.find_elements_by_class_name("shelf-default__link")
+        for url in url_list:
+            url = url.get_attribute("href")
+            self.__driver.implicitly_wait(10)
+            title = self.get_title(url)
+            #name_list = extract_complete_name_products(url)
+            #for name in name_list:
+            new_product = Products(title, "test", url)
+            new_product.save_product()
+        self.__driver.close()
+
+    def get_title(self, url):
+        # This function extract the tag title from
+        # each page of product
+        soup = self.extract_source_code_product(url)
+        title = soup.find("title").string
+        return title
+
+    def extract_source_code_product(self, url):
+        # This function extract the source code
+        # of each page of product
+        source_code = url.get_attribute("href")
+        source_code = requests.get(source_code)
+        plain_text = source_code.text
+        soup = BeautifulSoup(plain_text, "lxml")
+        return soup
+
 
 def main():
     csv_file = ExportCsv("../results.csv")
