@@ -78,8 +78,9 @@ class Crawler:
         for url in url_list:
             url = url.get_attribute("href")
             self.__driver.implicitly_wait(10)
-            title = self.get_title(url)
-            name_list = self.get_name(url)
+            soup = self.extract_source_code_product(url)
+            title = self.get_title(url, soup)
+            name_list = self.get_names(url, soup)
             for name in name_list:
                 new_product = Products(title, name, url)
                 new_product.save_product()
@@ -115,21 +116,20 @@ class Crawler:
         product_name = find_element.find("div").string
         return product_name
 
-    def get_title(self, url):
+    @staticmethod
+    def get_title(url, soup):
         # This function extract the tag title from
         # each page of product
-        soup = self.extract_source_code_product(url)
         title = soup.find("title").string
         return title
 
     def get_urls(self):
         return self.__driver.find_elements_by_class_name("shelf-default__link")
 
-    def get_name(self, url):
+    def get_names(self, url, soup):
         # This function extract the name of each product
         # plus your dimension from a script
         name_list = []
-        soup = self.extract_source_code_product(url)
         product_name = self.extract_name_product_without_variation(url, soup)
         json_text = self.extract_json_variations(url, soup)
         if json_text:
