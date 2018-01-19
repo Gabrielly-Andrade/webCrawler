@@ -16,15 +16,17 @@ class Counter(object):
         cls.count += 1
 '''
 
+
 class TestCrawler(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
         cls.instance_driver = Crawler()
 
-    def test_get_categories(cls):
-        result = cls.instance_driver.get_categories("http://www.epocacosmeticos.com.br/")
-        cls.assertEqual(result, ['https://www.epocacosmeticos.com.br/perfumes',
+
+    def test_get_categories(self):
+        result = self.instance_driver.get_categories("http://www.epocacosmeticos.com.br/")
+        self.assertEqual(result, ['https://www.epocacosmeticos.com.br/perfumes',
                                   'https://www.epocacosmeticos.com.br/cabelos',
                                   'https://www.epocacosmeticos.com.br/maquiagem',
                                   'https://www.epocacosmeticos.com.br/dermocosmeticos',
@@ -35,12 +37,35 @@ class TestCrawler(unittest.TestCase):
                                   'https://www.epocacosmeticos.com.br/ganhe-brindes',
                                   'https://www.epocacosmeticos.com.br/quero-cupom'])
 
-    def test_get_title(cls):
-        file_name = open("../tests_files/product_cabelo.html", "r", encoding="utf8")
-        soup = BeautifulSoup(file_name.read(), "lxml")
-        result = cls.instance_driver.get_title("product_cabelo.html", soup)
-        cls.assertEqual(result, "Mascara de Reconstrucao Lola Cosmetics Argan Oil - Epoca Cosmeticos")
+    def test_get_title(self):
+        file_name = open("../tests_files/product_cabelo.txt", "r", encoding="utf8")
+        soup = BeautifulSoup(file_name.read(), "html.parser")
+        result = self.instance_driver.get_title("product_cabelo.txt", soup)
+        self.assertEqual(result, "Mascara de Reconstrucao Lola Cosmetics Argan Oil - Epoca Cosmeticos")
         file_name.close()
+
+    def test_get_urls(self):
+        # I need a better reference/path to test it
+        self.instance_driver.load_page("file:///C:/Users/Gabri/Documents/webCrawler/webCrawler/tests_files/perfumes%231.html")
+        result = self.instance_driver.get_urls()
+        self.maxDiff = None
+        self.assertListEqual(result, ["https://www.epocacosmeticos.com.br/la-vie-est-belle-eau-de-parfum-lancome-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/black-caviar-paris-elysees-perfume-masculino-eau-de-toilette/p",
+                                  "https://www.epocacosmeticos.com.br/up-lady-deo-colonia-phytoderm-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/nina-edicao-colecionador-eau-de-toilette-nina-ricci-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/212-vip-rose-eau-de-parfum-carolina-herrera-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/amor-amor-eau-de-toilette-cacharel-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/billion-woman-eau-de-toilette-paris-elysees-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/1-million-eau-de-toilette-paco-rabanne-perfume-masculino/p",
+                                  "https://www.epocacosmeticos.com.br/gabriela-sabatini-eau-de-toilette-gabriela-sabatini-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/star-moschino-perfume-feminino-eau-de-parfum/p",
+                                  "https://www.epocacosmeticos.com.br/lady-million-eau-de-parfum-collectors-edition-paco-rabanne-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/lumiere-eau-de-cologne-fiorucci-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/212-nyc-vintage-body-spray-carolina-herrera-perfume-masculino-para-o-corpo/p",
+                                  "https://www.epocacosmeticos.com.br/good-girl-eau-de-parfum-carolina-herrera-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/vanilla-kiss-phyto-splash-deo-colonia-phytoderm-perfume-feminino/p",
+                                  "https://www.epocacosmeticos.com.br/212-sexy-pills-carolina-herrera-perfume-feminino/p"])
+
     '''
     def test_visit_categories(cls):
         cls.instance_driver.visit_categories(["perfumes", "cabelos"])
