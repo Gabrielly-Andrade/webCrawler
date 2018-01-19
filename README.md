@@ -7,18 +7,41 @@ The main objective of this project is to create a crawler who could extract the 
   
 ## Installation
 
-    I'm trying to use docker for this. More info will appear as soon as possible.
+#### 1. Clone or download this repository
 
-1- Clone this repository
+You can use git to clone
+    
+    git clone https://github.com/Gabrielly-Andrade/webCrawler.git
 
-2- Install docker using this website
+or you can download the zip package
 
-    https://docs.docker.com/engine/installation/#supported-platforms
+  
+#### 2. Install python3
 
-    Open your terminal and test your docker version using this command
+https://www.python.org/downloads/
 
-    docker --version
+#### 3. Install the packages
 
-    If you get the docker version as an output, you are ready to move to the next step. Otherwise, try to search to some tutorials on youtube.
+You can install the items in this steps using pip
 
-3-
+https://pip.pypa.io/en/stable/installing/
+ 
+  ##### 3.1 Selenium
+
+      pip install selenium
+
+  ##### 3.2 Beautifulsoup4
+
+      pip install beautifulsoup4
+
+  ##### 3.3 Requests
+
+      pip install requests
+      
+## Running
+
+Open the terminal, navigate to the right path (use cd to open the src file) and run
+
+    python crawler.py
+   
+    
