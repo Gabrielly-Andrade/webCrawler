@@ -4,7 +4,16 @@ Python Web Crawler: Using Selenium
 ## About
 
 The main objective of this project is to create a crawler who could extract the title, name and url of all the products in this website:  http://www.epocacosmeticos.com.br/. 
-  
+
+## Requirements
+
+    Mozilla Firefox
+    webdriver geckodriver
+    Python 3
+    Selenium
+    BeautifulSoup4
+    Requests
+    
 ## Installation
 
 #### 1. Clone or download this repository
@@ -15,32 +24,37 @@ You can use git to clone
 
 or you can download the zip package
 
+### 2. Install firefox brownser and geckodriver
+
+* [Firefox](https://www.mozilla.org/pt-BR/firefox/new/)
+
+* [Geckodriver](https://github.com/mozilla/geckodriver/releases)
   
-#### 2. Install python3
+#### 3. Install python3
 
-https://www.python.org/downloads/
+* [Python](https://www.python.org/downloads/)
 
-#### 3. Install the packages
+#### 4. Install the packages
 
 You can install the items in this steps using pip
 
-https://pip.pypa.io/en/stable/installing/
+* [Pip](https://pip.pypa.io/en/stable/installing/)
  
-  ##### 3.1 Selenium
+  ##### 4.1 Selenium
 
       pip install selenium
 
-  ##### 3.2 Beautifulsoup4
+  ##### 4.2 Beautifulsoup4
 
       pip install beautifulsoup4
 
-  ##### 3.3 Requests
+  ##### 4.3 Requests
 
       pip install requests
       
 ## Running
 
-Open the terminal, navigate to the right path (use cd to open the src file) and run
+After installing everything, you need to open the terminal, navigate to the right path (use cd to open the src file) and run
 
     python crawler.py
    
