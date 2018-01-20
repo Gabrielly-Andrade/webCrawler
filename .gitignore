@@ -2,3 +2,4 @@ results.csv
 debug.log
 __pycache__
 geckodriver.log
+.idea
