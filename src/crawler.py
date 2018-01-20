@@ -63,8 +63,7 @@ class Crawler:
             if "ofertas" not in url:
                 categories_pages.append(url)
         self.__driver.quit()
-        test = [categories_pages[2]]  # change
-        return test  # change
+        return categories_pages
 
     def load_page(self, url):
         # This method loads the page passed as argument
@@ -75,7 +74,7 @@ class Crawler:
         # This method visit the pages from each categories passed
         # and calls methods to extract each product from the page
         for page in categories_pages:
-            number_page = 1  # change
+            number_page = 1
             while True:
                 self.load_page(page + "#" + str(number_page))
                 if not self.__driver.find_elements_by_class_name(
@@ -95,9 +94,10 @@ class Crawler:
                 soup = self.extract_source_code_product(url)
                 title = self.get_title(url, soup)
                 name_list = self.get_names(url, soup)
-                for name in name_list:
-                    new_product = Products(title, name, url)
-                    new_product.save_product()
+                if name_list[0]:
+                    for name in name_list:
+                        new_product = Products(title, name, url)
+                        new_product.save_product()
         self.__driver.quit()
 
     @staticmethod
@@ -123,14 +123,16 @@ class Crawler:
             return json_text
 
     @staticmethod
-    def extract_name_product_without_variation(url, soup):
+    def extract_name_product_without_variation(soup):
         # This method return the main product name from each page of product
         try:
             find_element = soup.find("div", {"class", "product__floating-info--name"})
             product_name = find_element.find("div").string
         except AttributeError:
-            raise AttributeError("Unable to extract the correct main name")
-        return product_name
+            # raise AttributeError("Unable to extract the correct main name", url)
+            pass
+        else:
+            return product_name
 
     @staticmethod
     def get_title(url, soup):
@@ -152,7 +154,7 @@ class Crawler:
         name_list = []
         product_name = self.extract_name_product_without_variation(url, soup)
         json_text = self.extract_json_variations(url, soup)
-        if json_text:
+        if json_text and product_name:
             variations_list = self.extract_variations(json_text)
             if type(variations_list) == list and len(variations_list) > 1:
                 for variation in variations_list:
