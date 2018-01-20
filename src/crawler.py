@@ -110,7 +110,7 @@ class Crawler:
         return soup
 
     @staticmethod
-    def extract_json_variations(url, soup):
+    def extract_json_variations(soup):
         # This method return the json who contains
         # the variations of each product
         script = soup.find("script", text=re.compile(r"skuJson_0"))
@@ -152,8 +152,8 @@ class Crawler:
         # This method return the complete name of each product
         # (main name plus your variation)
         name_list = []
-        product_name = self.extract_name_product_without_variation(url, soup)
-        json_text = self.extract_json_variations(url, soup)
+        product_name = self.extract_name_product_without_variation(soup)
+        json_text = self.extract_json_variations(soup)
         if json_text and product_name:
             variations_list = self.extract_variations(json_text)
             if type(variations_list) == list and len(variations_list) > 1:
