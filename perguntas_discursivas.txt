@@ -1,0 +1,52 @@
+﻿Perguntas discursivas:
+
+1. Agora você tem de capturar dados de outros 100 sites. Quais seriam suas estratégias para escalar a aplicação?
+
+R.:
+Um dos principais desafios ao escrever um crawler é entender o site que estamos rastreando. 
+Ao estender a captura para outros 100 sites torna-se um pouco mais delicado essa análise, pois domínios diferentes possuem 
+leiautes diferentes do crawler base criado.
+Mas, antes de escalar a aplicação, é importante reforçar alguns itens como: 
+	
+	1.1 Entender os dados que devem ser coletados em cada um dos sites (Qual é o objetivo do crawler?);
+	1.2 Conhecer os aspectos legais do scraping, como direitos autorais por exemplo;
+	1.3 Compreender as permissões de rastreamento oferecidas pelo arquivo robots.txt 
+	    (geralmente vem na forma: www.domain.com.br/robots.txt). O recomendado é obedecer essas regras; 
+	1.4 Saber se os sites são pré-definidos ou deverá ser rastreado dentro de algum site;
+	1.5 Identificar os padrões básicos entre os sites (como a estrutura básica entre as url's) e entender a estrutura
+	    do HTML de cada um dos sites. OBS.: Como normalmente as páginas de um domínio possuem as mesmas características, 
+     bastaria analisar a estrutura de apenas uma página de cada um dos 100 sites (dependendo do que for extraído).
+	1.6 Estar atento para manipular o inesperado. No crawler realizado foi manipulado erros e exceções conhecidas, 
+     mas e quando os dados se comportam de maneiras diferentes em cada site?
+
+Para escalar a aplicação criada a classe "Crawler" deverá ser modificada, pois grande parte da busca foi utilizando xpath e 
+nomes de classes específicas para o domínio "época cosméticos". Ter o crawler utilizando a árvore DOM do navegador web foi 
+extremamente útil para um domínio, porém pode ser necessário utilizar outras técnicas, como expandir mais o uso de regex por exemplo, 
+para coletar os dados necessários de cada um dos 100 sites por inteiro.
+
+2. Alguns sites carregam o preço através de JavaScript. Como faria para capturar esse valor.
+
+R.:
+No desafio, pode-se perceber que a url das páginas é criada utilizando JavaScript. Sendo assim, o preço de um site poderia ser capturado de forma análoga. 
+Para manipular o JavaScript, o uso de uma ferramenta como o Selenium foi essencial para conseguir carregar o site exatamente da forma como ele aparecia 
+no navegador. O Selenium foi executado com o Firefox e uma instância do meu navegador era aberta para carregar o site em questão. Há também a possibilidade - 
+não testada neste desafio - de utilizar uma ferramenta integrada com o Selenium chamada PhantonJS. Ela é capaz de carregar os sites na memória manipulando 
+os scripts JS e sem ter que literalmente abrir o navegador.
+Assim, a captura do preço de um site também seria capturado com essas ferramentas mencionadas acima (Selenium e PhantonJS).
+
+3. Alguns sites podem bloquear a captura por interpretar seus acessos como um ataque DDOS. Como lidaria com essa situação?
+
+R.:
+A primeira ação seria identificar a taxa de requisição com que o crawler está fazendo ao servidor. Realizar muitas requisições por segundo pode, 
+além de interromper o serviço, ainda banir nosso IP. 
+Ao diminuir a taxa de requisição, carregamento das páginas e variar o tempo de uma requisição para outra (pode-se usar o time.sleep("tempo em segundos")) 
+estamnos mais perto do comportamento humano, dificultando assim a interpretação dos acessos como um ataque DDOS.
+
+4. Um cliente liga reclamando que está fazendo muitos acessos ao seu site e aumentando seus custos com infra. Como resolveria esse problema?
+
+R.: Primeiramente, deverá ser dito ao cliente que uma análise detalhada sobre o caso será realizada. Nessa análise, o código do site deverá ser 
+refatorado caso exista a possibilidade de reduzir as requisições que o próprio site realiza. Pode-se otimizar as requisições do JavaScript e CSS por exemplo.
+Por conseguinte, poderia ser feito uma limitação de requisição por um intervalo de tempo (dependendo do recurso utilizado) para que a infraestrutura
+do projeto não fique ainda mais custosa. Ainda assim, deveria ser explicado de forma clara junto ao cliente se na análise for verificada que os custos
+com infra são realmente necessários. Afinal, devemos fazer de tudo para satisfazer as necessidades do cliente, mas sem interferir na qualidade do trabalho
+e na ética da equipe.
