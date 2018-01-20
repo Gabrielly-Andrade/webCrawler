@@ -24,7 +24,7 @@ You can use git to clone
 
 or you can download the zip package
 
-### 2. Install firefox brownser and geckodriver
+#### 2. Install firefox brownser and geckodriver
 
 * [Firefox](https://www.mozilla.org/pt-BR/firefox/new/)
 
